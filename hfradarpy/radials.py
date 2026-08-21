@@ -113,7 +113,7 @@ def qc_radial_file(radial_file, qc_values=None, export=None, save_path=None, cle
         qc_qartod_radial_count=dict(min_count=75.0, low_count=225.0),
         qc_qartod_maximum_velocity=dict(max_speed=300.0, high_speed=100.0),
         qc_qartod_spatial_median=dict(
-            radial_smed_range_cell_limit=2.1, radial_smed_angular_limit=10, radial_smed_current_difference=30
+            smed_range_cell_limit=2.1, smed_angular_limit=10, smed_current_difference=30
         ),
         qc_qartod_temporal_gradient=dict(gradient_temp_fail=32, gradient_temp_warn=25),
         qc_qartod_primary_flag=dict(
