@@ -1,0 +1,1255 @@
+<title>QARTOD Radial QC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+
+<style>
+  :root {
+    --ground:      #F6F8F9;
+    --surface:     #FFFFFF;
+    --surface-alt: #EDF2F3;
+    --ink:         #101A1F;
+    --ink-muted:   #55676F;
+    --ink-faint:   #7C8D94;
+    --rule:        #D9E3E6;
+    --rule-strong: #B9C8CD;
+    --accent:      #0B6B78;
+    --accent-soft: #E0EFF1;
+
+    --pass:      #2C7A57;
+    --pass-bg:   #E2F0E9;
+    --suspect:   #8F5E12;
+    --suspect-bg:#F6ECD8;
+    --fail:      #A63A2B;
+    --fail-bg:   #F7E4E1;
+    --neutral:   #64757E;
+    --neutral-bg:#E7ECEE;
+
+    --sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    --measure: 68ch;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0B1317;
+      --surface:     #121D22;
+      --surface-alt: #17242A;
+      --ink:         #E3EDF0;
+      --ink-muted:   #9BADB4;
+      --ink-faint:   #74868D;
+      --rule:        #23343B;
+      --rule-strong: #354B53;
+      --accent:      #47AEBC;
+      --accent-soft: #163237;
+
+      --pass:      #5CBF8E;
+      --pass-bg:   #142E23;
+      --suspect:   #D4A24A;
+      --suspect-bg:#31260F;
+      --fail:      #E2705F;
+      --fail-bg:   #351915;
+      --neutral:   #8B9BA3;
+      --neutral-bg:#1D282D;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0B1317;
+    --surface:     #121D22;
+    --surface-alt: #17242A;
+    --ink:         #E3EDF0;
+    --ink-muted:   #9BADB4;
+    --ink-faint:   #74868D;
+    --rule:        #23343B;
+    --rule-strong: #354B53;
+    --accent:      #47AEBC;
+    --accent-soft: #163237;
+
+    --pass:      #5CBF8E;
+    --pass-bg:   #142E23;
+    --suspect:   #D4A24A;
+    --suspect-bg:#31260F;
+    --fail:      #E2705F;
+    --fail-bg:   #351915;
+    --neutral:   #8B9BA3;
+    --neutral-bg:#1D282D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    gap: 0;
+  }
+
+  @media (min-width: 1040px) {
+    .wrap { grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+  }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    grid-column: 1 / -1;
+    padding: 72px 0 40px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: clamp(2.4rem, 6vw, 3.9rem);
+    line-height: 1.02;
+    letter-spacing: -0.028em;
+    margin: 0 0 20px;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-size: 1.19rem;
+    line-height: 1.5;
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0 0 36px;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .fact {
+    flex: 1 1 150px;
+    padding: 14px 20px 14px 0;
+    border-right: 1px solid var(--rule);
+  }
+  .fact:last-child { border-right: 0; }
+  .fact dt {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 5px;
+  }
+  .fact dd {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.98rem;
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- rail ---------- */
+
+  nav.rail { display: none; }
+
+  @media (min-width: 1040px) {
+    nav.rail {
+      display: block;
+      grid-column: 1;
+      align-self: start;
+      position: sticky;
+      top: 32px;
+      padding-top: 56px;
+    }
+    nav.rail ol { list-style: none; margin: 0; padding: 0; }
+    nav.rail li { margin: 0 0 2px; }
+    nav.rail a {
+      display: block;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      letter-spacing: 0.02em;
+      color: var(--ink-faint);
+      text-decoration: none;
+      padding: 5px 0 5px 12px;
+      border-left: 2px solid var(--rule);
+      transition: color .15s, border-color .15s;
+    }
+    nav.rail a:hover, nav.rail a:focus-visible {
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+  }
+
+  main { grid-column: 1 / -1; min-width: 0; }
+  @media (min-width: 1040px) { main { grid-column: 2; } }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 56px; scroll-margin-top: 24px; }
+
+  h2 {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 1.62rem;
+    letter-spacing: -0.018em;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .section-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 26px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: -0.008em;
+    margin: 34px 0 10px;
+  }
+
+  p { margin: 0 0 16px; max-width: var(--measure); }
+  ul, ol { max-width: var(--measure); padding-left: 22px; margin: 0 0 16px; }
+  li { margin-bottom: 7px; }
+
+  a { color: var(--accent); text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.855em;
+    background: var(--surface-alt);
+    padding: 1.5px 5px;
+    border-radius: 3px;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 12.6px;
+    line-height: 1.62;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 16px 18px;
+    overflow-x: auto;
+    margin: 0 0 20px;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+
+  /* ---------- flag chips ---------- */
+
+  .flag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+    padding: 1px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .f-pass    { background: var(--pass-bg);    color: var(--pass); }
+  .f-suspect { background: var(--suspect-bg); color: var(--suspect); }
+  .f-fail    { background: var(--fail-bg);    color: var(--fail); }
+  .f-neutral { background: var(--neutral-bg); color: var(--neutral); }
+
+  /* ---------- tests ---------- */
+
+  .test {
+    border-top: 1px solid var(--rule);
+    padding: 24px 0 6px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  @media (min-width: 720px) {
+    .test { grid-template-columns: 92px minmax(0, 1fr); gap: 0 26px; }
+  }
+  .test:first-of-type { border-top: 2px solid var(--ink); }
+
+  .test-code {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 1.02rem;
+    color: var(--accent);
+    padding-top: 1px;
+  }
+  .test-scope {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 3px;
+  }
+  .test-body h3 { margin: 0 0 8px; font-size: 1.06rem; }
+  .test-body p { margin-bottom: 12px; }
+  .test-body p:last-child { margin-bottom: 14px; }
+  .asks {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 0.96rem;
+    color: var(--ink);
+  }
+
+  .params {
+    font-family: var(--mono);
+    font-size: 12.2px;
+    background: var(--surface-alt);
+    border-radius: 4px;
+    padding: 11px 14px;
+    margin: 0 0 14px;
+    overflow-x: auto;
+  }
+  .params div { white-space: nowrap; margin-bottom: 3px; }
+  .params div:last-child { margin-bottom: 0; }
+  .params .pname { color: var(--accent); }
+  .params .pnote { color: var(--ink-faint); }
+
+  /* ---------- tables ---------- */
+
+  .scroller { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--rule); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 620px; }
+  caption {
+    caption-side: bottom;
+    text-align: left;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    padding: 10px 2px 0;
+    max-width: var(--measure);
+    line-height: 1.5;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 13px;
+    border-bottom: 1px solid var(--rule);
+  }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--rule-strong);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:nth-child(even) { background: var(--surface-alt); }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.site { font-family: var(--mono); font-size: 12px; font-weight: 500; white-space: nowrap; }
+  .pat { color: var(--ink-faint); }
+
+  /* ---------- callouts ---------- */
+
+  .note {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 15px 18px;
+    margin: 0 0 20px;
+    max-width: var(--measure);
+  }
+  .note p:last-child { margin-bottom: 0; }
+  .note .label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 7px;
+  }
+  .warn { border-left-color: var(--fail); background: var(--fail-bg); }
+  .warn .label { color: var(--fail); }
+
+  /* ---------- pipeline ---------- */
+
+  .pipeline {
+    font-family: var(--mono);
+    font-size: 12.4px;
+    line-height: 1.9;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 20px;
+    overflow-x: auto;
+    margin: 0 0 20px;
+  }
+  .pipeline .dim { color: var(--ink-faint); }
+  .pipeline .hi { color: var(--accent); font-weight: 600; }
+
+  footer {
+    grid-column: 1 / -1;
+    margin-top: 72px;
+    padding-top: 22px;
+    border-top: 2px solid var(--ink);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    line-height: 1.8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">HFRadarPy · Operations Reference</p>
+    <h1>QARTOD Radial QC</h1>
+    <p class="standfirst">
+      How the seven QARTOD tests are applied to CODAR <code>.ruv</code> radial files
+      across 18 site&nbsp;×&nbsp;pattern combinations in the Gulf of Mexico — what each
+      test asks, which parameters it needs, how to switch one off, and where every
+      number came from.
+    </p>
+    <dl class="facts">
+      <div class="fact"><dt>Sites</dt><dd>10 sites · 18 combos</dd></div>
+      <div class="fact"><dt>Calibration window</dt><dd>2026-07-23 → 08-17</dd></div>
+      <div class="fact"><dt>Files surveyed</dt><dd>11,791</dd></div>
+      <div class="fact"><dt>Engine</dt><dd>hfradarpy · branch <code>updated</code></dd></div>
+    </dl>
+  </header>
+
+  <nav class="rail" aria-label="Contents">
+    <ol>
+      <li><a href="#pipeline">Pipeline</a></li>
+      <li><a href="#flags">Flag values</a></li>
+      <li><a href="#tests">The seven tests</a></li>
+      <li><a href="#switches">Switching tests</a></li>
+      <li><a href="#prim">The PRIM rollup</a></li>
+      <li><a href="#derivation">Deriving parameters</a></li>
+      <li><a href="#sites">Per-site values</a></li>
+      <li><a href="#running">Running it</a></li>
+      <li><a href="#decisions">Decisions</a></li>
+      <li><a href="#issues">Open issues</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- ================= PIPELINE ================= -->
+    <section id="pipeline">
+      <h2>What QC produces</h2>
+      <p class="section-note">Input, output, and what actually changes</p>
+
+      <p>
+        QC does not modify your measurements. It <strong>appends columns</strong>.
+        Longitude, latitude, velocity and bearing come out byte-identical; what you
+        gain is a verdict per row, plus a header block recording the thresholds that
+        produced it.
+      </p>
+
+      <div class="pipeline">
+<span class="dim">LOCAL_BASE/</span>&lt;institution&gt;<span class="dim">/</span>&lt;SITE&gt;<span class="dim">/</span><span class="hi">raw</span><span class="dim">/</span>&lt;Pattern&gt;<span class="dim">/</span>RDLx_SITE_YYYY_MM_DD_HHMM.ruv
+    <span class="dim">│    18 columns · no flags</span>
+    <span class="dim">▼</span>  <span class="hi">qc_radial_file()</span> <span class="dim">— seven tests + rollup</span>
+<span class="dim">LOCAL_BASE/</span>&lt;institution&gt;<span class="dim">/</span>&lt;SITE&gt;<span class="dim">/</span><span class="hi">qartod</span><span class="dim">/</span>&lt;Pattern&gt;<span class="dim">/</span>RDLx_SITE_YYYY_MM_DD_HHMM.ruv
+    <span class="dim">     26 columns · Q201–Q207 + PRIM</span>
+      </div>
+
+      <p>The output file gains a self-documenting header:</p>
+
+<pre><code>%QCFlagDefinitions: 1=pass 2=not_evaluated 3=suspect 4=fail 9=missing_data
+%QCTest: qc_qartod_maximum_velocity (Q202) - Test applies to each row.
+         Thresholds=[ high_vel=140 (cm/s) max_vel=190 (cm/s) ]
+%TableColumnTypes: ... BEAR VELO HEAD SPRC Q201 Q202 Q203 Q204 Q205 Q206 Q207 PRIM</code></pre>
+
+      <p>
+        That header is the real deliverable. Six months from now it tells you exactly
+        which settings produced a given flag — flags without their thresholds are not
+        defensible.
+      </p>
+
+      <div class="note warn">
+        <span class="label">Never write into raw/</span>
+        <p>
+          <code>to_ruv()</code> calls <code>os.remove()</code> on its target
+          <em>before</em> writing. If the write then fails, the file is gone and
+          nothing replaces it. The <code>overwrite=False</code> guard compares
+          the resolved source path against the filename string as passed, so a
+          relative path defeats it. Keep the raw archive read-only.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= FLAGS ================= -->
+    <section id="flags">
+      <h2>Flag values</h2>
+      <p class="section-note">IOOS QARTOD convention — used by every column</p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Flag</th><th>Meaning</th><th>What it tells you</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="flag f-pass">1</span></td>
+              <td>pass</td>
+              <td>The test ran and the value is good.</td>
+            </tr>
+            <tr>
+              <td><span class="flag f-neutral">2</span></td>
+              <td>not evaluated</td>
+              <td>The test could not run here — most often <code>Q206</code>, where a
+                  cell has no counterpart in the previous hour. Neither good nor bad.</td>
+            </tr>
+            <tr>
+              <td><span class="flag f-suspect">3</span></td>
+              <td>suspect</td>
+              <td>Outside normal but not impossible. Keep, but do not trust blindly.</td>
+            </tr>
+            <tr>
+              <td><span class="flag f-fail">4</span></td>
+              <td>fail</td>
+              <td>Reject. This is what the cleaned output strips.</td>
+            </tr>
+            <tr>
+              <td><span class="flag f-neutral">9</span></td>
+              <td>missing data</td>
+              <td>No value present to test.</td>
+            </tr>
+          </tbody>
+        </table>
+        <caption>
+          A real per-file distribution reads as a count per flag — e.g.
+          <code>Q206 {1: 371, 2: 61, 3: 9, 4: 12}</code> means 371 rows passed,
+          61 could not be evaluated, 9 were suspect and 12 failed, out of 453 rows.
+        </caption>
+      </div>
+    </section>
+
+    <!-- ================= TESTS ================= -->
+    <section id="tests">
+      <h2>The seven tests</h2>
+      <p class="section-note">Four need per-site parameters · three do not</p>
+
+      <p>
+        Grouped by the question they ask: <strong>Q201 and Q204</strong> ask whether the
+        file is usable at all; <strong>Q202 and Q203</strong> ask whether a vector is
+        physically possible; <strong>Q205 and Q206</strong> ask whether it agrees with its
+        neighbours in space and time; <strong>Q207</strong> asks whether the instrument is
+        still aimed correctly.
+      </p>
+
+      <div class="test">
+        <div class="test-code">Q201<span class="test-scope">Whole file</span></div>
+        <div class="test-body">
+          <h3>Syntax · QARTOD Test 6</h3>
+          <p class="asks">Is the file structurally intact?</p>
+          <p>
+            Header present, column counts consistent, <code>%TableRows</code> matching
+            the actual row count. Catches truncated transfers and interrupted writes —
+            including the partial files produced by the <code>to_ruv()</code> hazard above.
+          </p>
+          <div class="params"><div><span class="pnote">no parameters — never needs tuning</span></div></div>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q202<span class="test-scope">Per row</span></div>
+        <div class="test-body">
+          <h3>Maximum Velocity · QARTOD Test 7</h3>
+          <p class="asks">Is this speed physically plausible?</p>
+          <p>
+            Surface currents rarely exceed 1–2 m/s. Beyond <code>max_speed</code> the row
+            fails; between <code>high_speed</code> and <code>max_speed</code> it is suspect.
+            Catches Bragg peak misidentification, where the algorithm locks onto a ship
+            echo or interference instead of the sea surface.
+          </p>
+          <div class="params">
+            <div><span class="pname">high_speed</span> — suspect above this (cm/s) · <span class="pnote">p99 of observed |VELO|</span></div>
+            <div><span class="pname">max_speed</span> &nbsp;— fail above this (cm/s) · <span class="pnote">capped at %CurrentVelocityLimit</span></div>
+          </div>
+          <p>
+            The cap matters: the radar physically cannot report a current faster than its
+            own <code>%CurrentVelocityLimit</code>, so any value sitting at that limit is a
+            processing artefact rather than water movement. Your sites range from 80 to
+            250&nbsp;cm/s, which is why a single default is wrong.
+          </p>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q203<span class="test-scope">Per row</span></div>
+        <div class="test-body">
+          <h3>Valid Location · QARTOD Test 8</h3>
+          <p class="asks">Is this cell over water?</p>
+          <p>
+            Checks each lat/lon against a bundled coastline shapefile. Radars report all
+            around the compass, and anything inland is geometrically impossible.
+          </p>
+          <div class="params">
+            <div><span class="pname">use_mask</span> — default <code>True</code></div>
+            <div><span class="pname">res</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— <code>'high'</code> or <code>'low'</code> coastline resolution</div>
+          </div>
+          <p>
+            This is normally the largest source of <span class="flag f-fail">4</span> flags and
+            that is correct behaviour, not a misconfiguration. <code>OBSP</code> fails 42%
+            of rows because 42% of its cells point inland. Verify by breaking failures
+            down by bearing — they should cluster on the landward arc.
+          </p>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q204<span class="test-scope">Whole file</span></div>
+        <div class="test-body">
+          <h3>Radial Count · QARTOD Test 9</h3>
+          <p class="asks">Did the file produce enough vectors to be usable?</p>
+          <p>
+            Below <code>min_count</code> the coverage is too sparse to trust and the file
+            should not feed total-vector processing. Catches sick receivers, interference,
+            and poor sea state.
+          </p>
+          <div class="params">
+            <div><span class="pname">min_count</span> — fail below this</div>
+            <div><span class="pname">low_count</span> — suspect below this</div>
+          </div>
+          <div class="note">
+            <span class="label">Count what the test counts</span>
+            <p>
+              The test does <em>not</em> use the row count. When a <code>VFLG</code> column
+              exists it counts only rows where <code>VFLG != 128</code>. For
+              <code>ISCY</code> that is 421 of 453 rows. Thresholds derived from total
+              rows are systematically too high — an early pass at this failed every
+              <code>ISCY</code> file before the mistake was caught.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q205<span class="test-scope">Per row</span></div>
+        <div class="test-body">
+          <h3>Spatial Median · QARTOD Test 10</h3>
+          <p class="asks">Does this vector agree with its neighbours?</p>
+          <p>
+            Real ocean currents are spatially coherent — adjacent cells move similarly.
+            Each vector is compared against the median of its neighbours. Catches isolated
+            outliers that survive <code>Q202</code> because they are individually
+            plausible but wrong in context.
+          </p>
+          <div class="params">
+            <div><span class="pname">smed_range_cell_limit</span> &nbsp;— neighbourhood depth in range cells</div>
+            <div><span class="pname">smed_angular_limit</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;— neighbourhood width in degrees</div>
+            <div><span class="pname">smed_current_difference</span> — max deviation from median (cm/s)</div>
+          </div>
+          <p>
+            The angular window is scaled to each site's <code>%AngularResolution</code>.
+            A fixed 10° spans about two neighbours at a 5° site but roughly twenty at a
+            1° site — very different tests wearing the same number.
+          </p>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q206<span class="test-scope">Per row</span></div>
+        <div class="test-body">
+          <h3>Temporal Gradient · QARTOD Test 11</h3>
+          <p class="asks">Did this cell change too fast since last hour?</p>
+          <p>
+            Currents have inertia; a 50&nbsp;cm/s swing in an hour is not oceanography.
+            This is the only test needing a second file — the previous hour, which
+            <code>qc_radial_file()</code> locates by name in the same directory.
+          </p>
+          <div class="params">
+            <div><span class="pname">gradient_temp_warn</span> — suspect above this (cm/s·hr)</div>
+            <div><span class="pname">gradient_temp_fail</span> — fail above this (cm/s·hr)</div>
+          </div>
+          <div class="note">
+            <span class="label">Provisional</span>
+            <p>
+              These are the only thresholds <em>not</em> derived from your data. Doing so
+              needs a paired-consecutive-hour analysis that has not been run; the QARTOD
+              manual defaults are in place meanwhile. <code>Q206</code> is excluded from
+              <code>PRIM</code>, so this does not affect filtering.
+            </p>
+          </div>
+          <p>
+            Expect a healthy share of <span class="flag f-neutral">2</span> flags: cells
+            with no counterpart last hour cannot be compared. All-<span class="flag f-neutral">2</span>
+            means the previous file was not found.
+          </p>
+        </div>
+      </div>
+
+      <div class="test">
+        <div class="test-code">Q207<span class="test-scope">Whole file</span></div>
+        <div class="test-body">
+          <h3>Average Radial Bearing · QARTOD Test 12</h3>
+          <p class="asks">Is the antenna still pointing where it should?</p>
+          <p>
+            Averages the <code>BEAR</code> column and compares against a reference.
+            Catches a knocked or drifting antenna and a degrading pattern.
+          </p>
+          <div class="params">
+            <div><span class="pname">reference_bearing</span> &nbsp;— expected mean bearing (deg)</div>
+            <div><span class="pname">warning_threshold</span> &nbsp;— suspect beyond this deviation</div>
+            <div><span class="pname">failure_threshold</span> &nbsp;— fail beyond this deviation</div>
+          </div>
+          <p>
+            <strong>Do not use <code>%AntennaBearing</code> as the reference.</strong> The
+            direction the antenna is aimed and the centroid of where it returns data are
+            different numbers, because coverage is not symmetric about the boresight —
+            land blocks one side. Across these sites they disagree by up to 106°.
+          </p>
+          <p>
+            The test measures <em>constancy</em>, not correctness, so thresholds follow
+            each site's own hour-to-hour variability rather than a fixed 15/30.
+            <code>PCYC|IdealPattern</code> is steady at σ&nbsp;=&nbsp;4.0° and deserves tight
+            bounds; <code>OBSP</code> swings at σ&nbsp;=&nbsp;41° and would drown in false alarms.
+          </p>
+          <div class="note warn">
+            <span class="label">Broken on full-circle sites</span>
+            <p>
+              The library averages bearings arithmetically. Where coverage wraps through
+              0/360° that is not a real direction — for one Ideal-pattern site the
+              arithmetic mean read 192° against a true circular mean of 351°. Sites
+              failing that check have <code>Q207</code> omitted entirely rather than
+              given a meaningless reference.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SWITCHES ================= -->
+    <section id="switches">
+      <h2>Switching tests on and off</h2>
+      <p class="section-note">One table in qc_config.py · applied at run time</p>
+
+      <p>
+        Every test carries two independent booleans. They are read by
+        <code>qc_walk.py</code> when it runs, not baked into
+        <code>site_thresholds.py</code>, so changing either takes effect immediately
+        with no regeneration.
+      </p>
+
+<pre><code>TESTS = {
+    "qc_qartod_syntax":             dict(run=True,  prim=True),   # Q201
+    "qc_qartod_maximum_velocity":   dict(run=True,  prim=True),   # Q202
+    "qc_qartod_valid_location":     dict(run=True,  prim=True),   # Q203
+    "qc_qartod_radial_count":       dict(run=True,  prim=True),   # Q204
+    "qc_qartod_spatial_median":     dict(run=True,  prim=True),   # Q205
+    "qc_qartod_temporal_gradient":  dict(run=True,  prim=False),  # Q206
+    "qc_qartod_avg_radial_bearing": dict(run=False, prim=False),  # Q207
+}</code></pre>
+
+      <ul>
+        <li><strong><code>run</code></strong> — run the test at all.
+            <code>False</code> writes no flag column for it.</li>
+        <li><strong><code>prim</code></strong> — let its result feed
+            <code>PRIM</code>, the column you filter on.</li>
+      </ul>
+
+      <p>
+        <code>run=True, prim=False</code> records a flag for diagnosis without letting
+        it condemn individual vectors. Parameters are derived for disabled tests
+        anyway, so switching one back on also needs no regeneration.
+      </p>
+
+      <div class="note warn">
+        <span class="label">Q201 and Q203 cannot be disabled</span>
+        <p>
+          <code>qc_radial_file</code> calls <code>qc_qartod_syntax()</code>
+          unconditionally (<code>radials.py:147</code>) and calls
+          <code>qc_qartod_valid_location()</code> in an <code>else</code> branch when
+          given no parameters (<code>radials.py:153-157</code>). Setting
+          <code>run=False</code> on either is refused at import rather than silently
+          ignored.
+        </p>
+      </div>
+
+      <p>
+        The table is validated when <code>qc_config.py</code> loads, so a contradiction
+        stops the run before any file is touched. It rejects <code>prim=True</code> with
+        <code>run=False</code>, non-boolean values, missing keys, disabling a
+        non-optional test, and a table where nothing feeds <code>PRIM</code>. That last
+        pair matters because <code>qc_qartod_primary_flag</code> silently ignores names
+        for tests that did not run — an unnoticed contradiction would produce a
+        <code>PRIM</code> column that looks correct and quietly omits a test.
+      </p>
+
+      <p>For a single run, without editing the file:</p>
+<pre><code>python qc_walk.py --no-test qc_qartod_avg_radial_bearing</code></pre>
+
+      <p>
+        Safe to use freely — each output file records which tests actually ran in its
+        own <code>%QCTest</code> header, so the provenance survives the flag being
+        forgotten.
+      </p>
+    </section>
+
+    <!-- ================= PRIM ================= -->
+    <section id="prim">
+      <h2>The PRIM rollup</h2>
+      <p class="section-note">The column you actually filter on</p>
+
+      <p>
+        <code>PRIM</code> is the worst flag across the tests whose <code>prim</code> is
+        <code>True</code>. A row with <code>Q203&nbsp;=&nbsp;4</code> gets
+        <code>PRIM&nbsp;=&nbsp;4</code> even though every other test passed it.
+      </p>
+
+      <p>
+        <strong>Q206 and Q207 are deliberately excluded.</strong> Q207 is a whole-file
+        verdict about the instrument — a bearing failure should not condemn every
+        individual vector. Q206 is coverage-dependent and produces
+        <span class="flag f-neutral">2</span> flags for reasons unrelated to data quality.
+        Expect rows where <code>Q206&nbsp;=&nbsp;4</code> but
+        <code>PRIM&nbsp;=&nbsp;1</code>.
+      </p>
+
+      <p>
+        Each file states its own membership, so the rollup is auditable after the fact:
+      </p>
+
+<pre><code>%QCTest: qc_qartod_primary_flag (PRIM) - Primary Flag - Highest flag value of
+         Q201, Q202, Q203, Q204, Q205 ("not_evaluated" flag results ignored)</code></pre>
+
+      <p>To filter, keep everything that is not a failure:</p>
+<pre><code>clean = r.data[r.data["PRIM"] != 4]</code></pre>
+    </section>
+
+    <!-- ================= DERIVATION ================= -->
+    <section id="derivation">
+      <h2>How the parameters were derived</h2>
+      <p class="section-note">Policy lives in qc_config.py · numbers are generated</p>
+
+      <p>
+        Every number in <code>site_thresholds.py</code> comes from a percentile of what
+        each site actually produced over the calibration window. The rules are policy
+        choices, stated so they can be argued with:
+      </p>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr><th>Parameter</th><th>Rule</th><th>Reasoning</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="site">Q202 high_speed</td>
+              <td class="num">p99 |VELO|</td>
+              <td>The top 1% of observed speeds are worth a second look.</td>
+            </tr>
+            <tr>
+              <td class="site">Q202 max_speed</td>
+              <td class="num">min(p99.9, velLimit)</td>
+              <td>The radar cannot report past its own limit.</td>
+            </tr>
+            <tr>
+              <td class="site">Q204 min_count</td>
+              <td class="num">p02 of VFLG≠128</td>
+              <td>Must match the statistic the test computes.</td>
+            </tr>
+            <tr>
+              <td class="site">Q204 low_count</td>
+              <td class="num">p10 of VFLG≠128</td>
+              <td>A percentile <em>is</em> a flag rate — see below.</td>
+            </tr>
+            <tr>
+              <td class="site">Q205 angular_limit</td>
+              <td class="num">5 × %AngularResolution</td>
+              <td>Keeps the neighbourhood a comparable arc at 1°, 2° and 5° sites.</td>
+            </tr>
+            <tr>
+              <td class="site">Q207 reference</td>
+              <td class="num">median per-file mean</td>
+              <td>Empirical, not the header's <code>%AntennaBearing</code>.</td>
+            </tr>
+            <tr>
+              <td class="site">Q207 warn / fail</td>
+              <td class="num">2σ / 3σ</td>
+              <td>Follows each site's own variability.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="label">A percentile is a flag rate</span>
+        <p>
+          Setting <code>low_count</code> at the 25th percentile means roughly 25% of that
+          site's files come back <span class="flag f-suspect">3</span> — by arithmetic, not
+          because anything is wrong with them. The current setting is p10, giving about
+          10%. Lower it for fewer flags, raise it to surface every thin hour. This is an
+          operational judgement, not something the data can settle.
+        </p>
+      </div>
+
+      <h3>Overriding a derived number</h3>
+
+      <p>
+        Precedence is <strong>derived → <code>FIXED</code> → <code>OVERRIDES</code></strong>.
+        <code>FIXED</code> applies to every site and merges parameter by parameter, so one
+        can be pinned while the rest stay derived; <code>OVERRIDES</code> is keyed
+        <code>"&lt;institution&gt;|&lt;SITE&gt;|&lt;Pattern&gt;"</code> and replaces a test's
+        parameters wholesale. Both require a regeneration, and both annotate the generated
+        entry so the substitution is visible later.
+      </p>
+
+<pre><code>FIXED = {
+    "qc_qartod_maximum_velocity": dict(high_speed=100),   # max_speed stays derived
+}
+
+OVERRIDES = {
+    "usm|OBSP|IdealPattern": {
+        "qc_qartod_radial_count": dict(min_count=10, low_count=30),
+    },
+}</code></pre>
+
+      <p>
+        A value you supply is used <em>verbatim</em>: unlike a derived
+        <code>max_speed</code>, it is not capped at the site's
+        <code>%CurrentVelocityLimit</code>. Naming a test that has no derived parameters
+        adds it, which is the only way to reach <code>Q203</code>'s <code>use_mask</code>
+        and <code>res</code>.
+      </p>
+
+      <div class="note">
+        <span class="label">Parameters are checked before the run</span>
+        <p>
+          Every resulting dict is validated against the real <code>Radial</code> method
+          signatures — unknown names, missing required ones, and names
+          <code>qc_radial_file</code> supplies itself. A typo fails at startup naming the
+          parameter, rather than partway through a run after files have been written. This
+          is the check that would have caught the <code>radial_smed_*</code> bug that
+          started this work.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= SITES ================= -->
+    <section id="sites">
+      <h2>Per-site values</h2>
+      <p class="section-note">Generated 2026-08-28 · regenerate when a site changes</p>
+
+      <div class="note">
+        <span class="label">Q202 is currently pinned</span>
+        <p>
+          <code>FIXED</code> sets <code>high_speed=200, max_speed=300</code> for every
+          site, so the <code>Q202</code> column below is uniform rather than derived.
+          Note what that means at the slower sites: <code>PCYC</code>'s radar cannot
+          report above 80&nbsp;cm/s and <code>SGRV</code>'s above 100, so a fail threshold
+          of 300 can never be reached there — <code>Q202</code> is effectively inert at
+          those two. Pinning only <code>high_speed</code> and letting
+          <code>max_speed</code> stay derived keeps a physically meaningful fail
+          threshold at every site.
+        </p>
+      </div>
+
+      <div class="scroller">
+        <table>
+          <thead>
+            <tr>
+              <th>Site · pattern</th>
+              <th>Q202 hi\max</th>
+              <th>Q204 min\low</th>
+              <th>Q205 ang</th>
+              <th>Q207 ref ±w/f</th>
+              <th>Ang res</th>
+              <th>Vel limit</th>
+              <th>Empty</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="site">gerg · ISCY <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">323\478</td><td class="num">25</td><td class="num">134 ±34/51</td><td class="num">5°</td><td class="num">250</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · ISCY <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">299\473</td><td class="num">25</td><td class="num">96 ±16/24</td><td class="num">5°</td><td class="num">250</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · MBNP <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">333\423</td><td class="num">25</td><td class="num">148 ±14/21</td><td class="num">5°</td><td class="num">150</td><td class="num">1%</td></tr>
+            <tr><td class="site">gerg · PINS <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">105\143</td><td class="num">25</td><td class="num">183 ±20/30</td><td class="num">5°</td><td class="num">150</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · PINS <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">308\443</td><td class="num">25</td><td class="num">115 ±17/26</td><td class="num">5°</td><td class="num">150</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · PMGC <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">10\107</td><td class="num">25</td><td class="num"><span class="flag f-neutral">omitted</span></td><td class="num">5°</td><td class="num">150</td><td class="num">3%</td></tr>
+            <tr><td class="site">gerg · PMGC <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">43\106</td><td class="num">25</td><td class="num">108 ±24/35</td><td class="num">5°</td><td class="num">150</td><td class="num">2%</td></tr>
+            <tr><td class="site">gerg · SSDE <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">83\130</td><td class="num">25</td><td class="num">192 ±29/43</td><td class="num">5°</td><td class="num">180</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · SSDE <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">180\238</td><td class="num">25</td><td class="num">148 ±15/23</td><td class="num">5°</td><td class="num">180</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · UASA <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">170\249</td><td class="num">25</td><td class="num">181 ±27/40</td><td class="num">5°</td><td class="num">150</td><td class="num">0%</td></tr>
+            <tr><td class="site">gerg · UASA <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">131\247</td><td class="num">25</td><td class="num">113 ±10/15</td><td class="num">5°</td><td class="num">150</td><td class="num">0%</td></tr>
+            <tr><td class="site">usm · HBSP <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">273\468</td><td class="num">10</td><td class="num">195 ±16/24</td><td class="num">1°</td><td class="num">180</td><td class="num">25%</td></tr>
+            <tr><td class="site">usm · HBSP <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">325\567</td><td class="num">10</td><td class="num">197 ±19/28</td><td class="num">1°</td><td class="num">180</td><td class="num">22%</td></tr>
+            <tr><td class="site">usm · OBSP <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">10\11</td><td class="num">10</td><td class="num"><span class="flag f-neutral">omitted</span></td><td class="num">1°</td><td class="num">150</td><td class="num">5%</td></tr>
+            <tr><td class="site">usm · PCYC <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">869\962</td><td class="num">10</td><td class="num">173 ±8/12</td><td class="num">2°</td><td class="num">80</td><td class="num">0%</td></tr>
+            <tr><td class="site">usm · PCYC <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">253\356</td><td class="num">10</td><td class="num">160 ±11/17</td><td class="num">2°</td><td class="num">80</td><td class="num">0%</td></tr>
+            <tr><td class="site">usm · SGRV <span class="pat">Ideal</span></td><td class="num">200\300</td><td class="num">10\11</td><td class="num">10</td><td class="num">136 ±36/55</td><td class="num">1°</td><td class="num">100</td><td class="num">23%</td></tr>
+            <tr><td class="site">usm · SGRV <span class="pat">Meas</span></td><td class="num">200\300</td><td class="num">10\11</td><td class="num">10</td><td class="num">131 ±20/30</td><td class="num">1°</td><td class="num">100</td><td class="num">4%</td></tr>
+          </tbody>
+        </table>
+        <caption>
+          Keys are <code>&lt;institution&gt;|&lt;SITE&gt;|&lt;Pattern&gt;</code> — the
+          institution is part of the key so two networks can use the same site code
+          without colliding. Velocities in cm/s, counts in vectors, angles in degrees.
+          <em>Empty</em> is the share of files containing zero radial rows — these fail
+          <code>Q204</code>, which is intended. <code>OBSP</code> and <code>SGRV</code>
+          sit at the <code>Q204_ABSOLUTE_FLOOR</code> of 10 because their normal output
+          is genuinely sparse.
+        </caption>
+      </div>
+
+      <p>
+        Two sites have only one pattern: <code>usm|OBSP</code> is Ideal-only and
+        <code>gerg|MBNP</code> is Measured-only. Running with
+        <code>--pattern MeasPattern</code> therefore skips OBSP, and
+        <code>--pattern IdealPattern</code> skips MBNP.
+      </p>
+
+      <div class="note warn">
+        <span class="label">No fallback for an unknown site</span>
+        <p>
+          A site+pattern absent from this table is <strong>not processed</strong>. There
+          are no default thresholds — flags computed against substitute numbers would
+          look valid and mean nothing. Such sites are listed before the run, marked
+          <code>no thresholds</code> in the progress table, listed again in the summary,
+          and make the exit status 1. Adding a site means regenerating
+          <code>site_thresholds.py</code>, not just dropping files into
+          <code>LOCAL_BASE</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= RUNNING ================= -->
+    <section id="running">
+      <h2>Running it</h2>
+      <p class="section-note">Four files in qartod/ · run from inside it</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>File</th><th>Role</th><th>Hand-edit?</th></tr></thead>
+          <tbody>
+            <tr><td class="site">qc_config.py</td><td>Policy — percentiles, test switches, FIXED, OVERRIDES</td><td>Yes — this is the one you tune</td></tr>
+            <tr><td class="site">gen_thresholds.py</td><td>Surveys raw files, emits thresholds</td><td>Only to change the survey itself</td></tr>
+            <tr><td class="site">site_thresholds.py</td><td>The derived numbers</td><td>No — regenerated; use <code>FIXED</code> / <code>OVERRIDES</code></td></tr>
+            <tr><td class="site">qc_walk.py</td><td>Walks raw/ → qartod/</td><td>Rarely</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Typical cycle</h3>
+<pre><code>cd qartod
+
+# 1. adjust policy (e.g. Q204_LOW_PERCENTILE)
+$EDITOR qc_config.py
+
+# 2. regenerate the numbers    ← only after a percentile, sigma rule,
+python gen_thresholds.py \       FIXED, OVERRIDES, or a new site
+    &gt; site_thresholds.py
+
+# 3. see what would happen — writes nothing
+python qc_walk.py --dry-run
+
+# 4. trial one site into a scratch root
+python qc_walk.py --site ISCY --limit 24 --out /tmp/trial
+
+# 5. the real run
+python qc_walk.py
+
+# ...or one antenna pattern at a time
+python qc_walk.py --pattern MeasPattern
+python qc_walk.py --pattern IdealPattern</code></pre>
+
+      <p>
+        <strong>Step 2 is conditional.</strong> Changing <code>TESTS</code> takes effect
+        immediately, since <code>qc_walk.py</code> reads it at run time. It is
+        <em>required</em> when a site is new.
+      </p>
+
+      <p>
+        Reruns skip existing outputs, so step 5 is resumable; pass <code>--force</code> to
+        redo. Per-file failures are counted and reported without aborting the run.
+      </p>
+
+      <div class="note warn">
+        <span class="label">The redirect in step 2 is load-bearing</span>
+        <p>
+          <code>gen_thresholds.py</code> prints the module to stdout rather than writing
+          the file. Run it bare and the thresholds scroll past while
+          <code>site_thresholds.py</code> stays untouched — silently, with no error. Run
+          it from the repo root and the file lands where nothing imports it, leaving the
+          real one stale. If a change to <code>qc_config.py</code> seems to have had no
+          effect, check this first.
+        </p>
+      </div>
+
+      <div class="note">
+        <span class="label">Environment</span>
+        <p>
+          Requires <code>pandas&nbsp;&lt;&nbsp;3</code>. Under pandas&nbsp;3
+          <code>to_ruv()</code> raises
+          <code>TypeError: Invalid value '%%' for dtype 'float64'</code> and leaves a
+          truncated file on disk. The pin is applied to the conda environment only —
+          <code>environment_dev.yml</code> is unchanged. Under pandas&nbsp;2 the same line
+          emits a <code>FutureWarning</code> once per file; that warning is the pin's
+          expiry notice.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= DECISIONS ================= -->
+    <section id="decisions">
+      <h2>Decisions and why</h2>
+      <p class="section-note">The reasoning behind non-obvious choices</p>
+
+      <h3>Measured over Ideal, where both exist</h3>
+      <p>
+        Ideal-pattern files span the full compass, which breaks <code>Q207</code>'s
+        arithmetic mean and inflates <code>Q203</code> failures. Measured patterns cover a
+        narrower, real arc. Ten of the eleven sites have both; <code>OBSP</code> has only
+        Ideal.
+      </p>
+
+      <h3>QC Ideal and Measured separately</h3>
+      <p>
+        They are two different processings of the same measurement hour, and their
+        statistics differ substantially — <code>SGRV</code> has 23% empty files on Ideal
+        against 4% on Measured. Pooling them produces thresholds that fit neither.
+      </p>
+
+      <h3>Q207 omitted rather than approximated</h3>
+      <p>
+        Where σ exceeds 20° or the arithmetic and circular means disagree by more than
+        15°, no reference bearing would be meaningful. A test that cannot work is better
+        left out than given a number that looks authoritative.
+      </p>
+
+      <h3>Empty files are QC'd, not skipped</h3>
+      <p>
+        A file with zero radial rows is a real operational signal. It flows through and
+        fails <code>Q204</code>, which is the correct record. <code>HBSP</code> at 22–25%
+        empty is worth investigating on its own.
+      </p>
+
+      <h3>Unconfigured sites are skipped, not defaulted</h3>
+      <p>
+        An earlier version fell back to generic thresholds for a site with no entry.
+        That produced output that looked valid and meant nothing, and — because reruns
+        skip existing files — a later regeneration would not repair it. Removing the
+        fallback makes adding a site a deliberate two-step act: drop the files in, then
+        regenerate. The data alone produces nothing.
+      </p>
+
+      <h3>Test switches are read at run time</h3>
+      <p>
+        Whether a test runs, and whether it feeds <code>PRIM</code>, needs no knowledge
+        of the data — so baking it into <code>site_thresholds.py</code> would mean
+        surveying 11,791 files to flip a boolean. Keeping it in
+        <code>qc_config.TESTS</code> and applying it at run time also leaves
+        <code>site_thresholds.py</code> holding only measured facts, and
+        <code>qc_config.py</code> only chosen ones.
+      </p>
+    </section>
+
+    <!-- ================= ISSUES ================= -->
+    <section id="issues">
+      <h2>Open issues</h2>
+      <p class="section-note">Tracked in full in TODO.md</p>
+
+      <div class="scroller">
+        <table>
+          <thead><tr><th>#</th><th>Issue</th><th>Impact</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="num">1</td>
+              <td><code>to_ruv()</code> fails on pandas 3 — a string is written into a
+                  float64 column</td>
+              <td>Worked around by pinning <code>pandas&lt;3</code></td>
+            </tr>
+            <tr>
+              <td class="num">2</td>
+              <td><code>to_ruv()</code> calls <code>os.remove()</code> before writing;
+                  <code>overwrite=False</code> compares raw path strings</td>
+              <td>Data loss if output is ever aimed at raw/</td>
+            </tr>
+            <tr>
+              <td class="num">2b</td>
+              <td>Ctrl-C can leave a truncated file, or a complete-looking one whose
+                  <code>Q205</code> is uniformly <span class="flag f-neutral">2</span> —
+                  three bare <code>except:</code> clauses in <code>radials.py</code>
+                  swallow <code>KeyboardInterrupt</code></td>
+              <td>Rerun the affected site with <code>--force</code></td>
+            </tr>
+            <tr>
+              <td class="num">3</td>
+              <td><code>qc_qartod_stuck_value_version_2</code> reads the v1 config key</td>
+              <td><code>KeyError</code>; opt-in path only, not a QARTOD test</td>
+            </tr>
+            <tr>
+              <td class="num">4</td>
+              <td>Neither <code>qc_radial_file()</code> nor <code>to_ruv()</code> has test
+                  coverage</td>
+              <td>Both were broken while the suite stayed green</td>
+            </tr>
+            <tr>
+              <td class="num">6</td>
+              <td>hfradmin's stored <code>qc_settings</code> use the
+                  <code>radial_smed_*</code> names</td>
+              <td>Will raise <code>TypeError</code> if ever fed to
+                  <code>qc_radial_file</code></td>
+            </tr>
+            <tr>
+              <td class="num">7</td>
+              <td><code>QCOP</code> expected downstream but never produced</td>
+              <td>Harmless — it is the manual operator flag</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Unfinished work</h3>
+      <ul>
+        <li><strong>Q206 thresholds are not derived</strong> — needs a paired-hour analysis.</li>
+        <li><strong>One month is a thin calibration window.</strong> The percentiles assume
+            most of 2026-07-23 → 08-17 was healthy. If a site was faulty in that period,
+            the thresholds have been calibrated to accept the fault.</li>
+        <li><strong>Flag rates have not been reviewed at full scale.</strong> A 168-file
+            trial across four sites gave PRIM pass rates of 58–99% with zero errors, but
+            the full 11,791-file run has not been made.</li>
+        <li><strong>Nothing verifies the output.</strong> No pass checks that a written
+            file's <code>%TableRows</code> matches its actual row count, or flags files
+            whose <code>Q205</code> column is uniformly
+            <span class="flag f-neutral">2</span> — the two signatures of an interrupted
+            run.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    HFRadarPy · fork <code>QI-Xiao/HFRadarPy</code>, branch <code>updated</code> ·
+    source at <code>qartod/reference.html</code><br>
+    Calibration window 2026-07-23 → 2026-08-17 · 11,791 files · 10 sites · 18 site×pattern combinations<br>
+    Regenerate thresholds after any antenna re-aim, pattern re-measure, or resolution change.
+  </footer>
+
+</div>
