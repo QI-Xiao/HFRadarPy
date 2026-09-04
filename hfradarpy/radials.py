@@ -2198,9 +2198,11 @@ class Radial(fileParser):
                                           columns=rcopy._tables[1]["_TableHeader"][0])
                     rcopy.data.columns = rcopy._tables[1]["_TableHeader"][0]
                     rcopy.data = pd.concat([row_df, rcopy.data], ignore_index=True)
-                    rcopy.data.insert(0, "%%", np.nan)  # Insert column at the beginning of dataframe of NaNs
-                    rcopy.data.iloc[
-                        0, rcopy.data.columns.get_loc("%%")] = "%%"  # make the first row in the first column a '%%'
+                    # Insert an object-dtype column at the beginning of the dataframe whose first row is '%%'
+                    # and remaining rows are NaN (an object column avoids pandas' incompatible-dtype warning)
+                    first_col = pd.Series([np.nan] * len(rcopy.data), index=rcopy.data.index, dtype=object)
+                    first_col.iloc[0] = "%%"
+                    rcopy.data.insert(0, "%%", first_col)
 
                     # Output data table to string
                     # rcopy.data.to_string(f, index=False, justify='center', header=True, na_rep=' ')
@@ -2579,6 +2581,8 @@ class Radial(fileParser):
             for rr in range(RLim, BRvel.shape[1] + RLim):
                 for bb in range(BLim, BRvel.shape[0] + BLim):
                     temp = BRpad[bb - BLim: bb + BLim + 1, rr - RLim: rr + RLim + 1]  # temp is the matrix of neighbors
+                    if np.all(np.isnan(temp)):
+                        continue  # no neighbors: leave NaN rather than let nanmedian warn on an all-NaN slice
                     BRmed[bb][rr] = np.nanmedian(temp)
 
             # now remove the padding from the array containing the median values
