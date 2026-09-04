@@ -6,9 +6,10 @@ Everything for the daily job lives in this directory:
 
 | File | Role |
 |---|---|
-| `daily_ruv.sh` | Cron entry point: activates the conda env, runs the two scripts below, prunes old QC output, logs to `~/codar/logs/` |
+| `daily_ruv.sh` | Cron entry point: activates the conda env, runs the three scripts below, logs to `~/codar/logs/` |
 | `pull_ruv.py` | Harvests the last 30 days of `.ruv` files from partner servers into `LOCAL_BASE` (see `README_pull_ruv.md`) |
 | `qc_walk.py` | Applies QARTOD QC to every raw file that has no QC output yet |
+| `prune_qc.py` | Deletes `qartod/` output older than 30 days, mirroring what `pull_ruv.py` does for `raw/` |
 | `environment.lock.yml` | Pinned conda env the job is known to work in |
 
 Server setup, once:
@@ -29,8 +30,8 @@ MAILTO=you@tamu.edu
 30 6 * * *  $HOME/HFRadarPy/qartod/daily_ruv.sh
 ```
 
-Edit the settings block at the top of `daily_ruv.sh` if the env name, log
-directory, or retention differ on the server. The data root for both scripts is
+Edit the three variables at the top of `daily_ruv.sh` (conda.sh path, env name,
+log directory) to match the server. The data root for all scripts is
 `LOCAL_BASE` in `qc_config.py`.
 
 
