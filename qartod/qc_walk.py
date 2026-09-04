@@ -21,6 +21,11 @@ Safety:
     so a mistargeted run would destroy raw data with nothing to replace it.
   * Existing outputs are skipped unless --force, so reruns are cheap.
   * A per-file failure is counted and reported, never fatal.
+  * A raw file whose data table has no rows (an empty radial -- the site
+    produced no vectors that hour) is counted in the 'empty' column and left
+    alone: qc_radial_file would silently write nothing for it anyway. Since no
+    output file exists to mark it done, it is re-examined on every run; that
+    costs one header parse per file per run, nothing more.
   * A site+pattern with no entry in site_thresholds.py is NOT processed. There
     are no fallback thresholds -- flags computed against substitute numbers
     would look valid and mean nothing. Such sites are listed before the run and
@@ -179,7 +184,7 @@ def main(argv=None):
     run_tests, prim_tests = resolve_policy(args.no_test)
 
     if not args.dry_run:
-        from hfradarpy.radials import qc_radial_file
+        from hfradarpy.radials import Radial, qc_radial_file
 
         # Check every dict we might use before touching a single file, so a
         # bad parameter name fails at startup rather than mid-run.
@@ -217,12 +222,12 @@ def main(argv=None):
 
     total = Counter()
     print(f"{'institution|site|pattern':34} {'files':>6} {'todo':>6} {'ok':>6} "
-          f"{'skip':>6} {'err':>5}")
-    print("-" * 70)
+          f"{'empty':>6} {'skip':>6} {'err':>5}")
+    print("-" * 77)
 
     for key, files in unconfigured:
-        print(f"{key:34} {len(files):>6} {'--':>6} {'--':>6} {'--':>6} {'--':>5}"
-              f"   no thresholds")
+        print(f"{key:34} {len(files):>6} {'--':>6} {'--':>6} {'--':>6} {'--':>6} "
+              f"{'--':>5}   no thresholds")
 
     for key, files in selected:
         qc_values = apply_policy(THRESHOLDS[key], run_tests, prim_tests)
@@ -238,12 +243,18 @@ def main(argv=None):
             else:
                 todo.append((src, dst))
 
-        ok = err = 0
+        ok = err = empty = 0
         if not args.dry_run:
             for src, dst in todo:
                 try:
+                    radial = Radial(str(src))
+                    if not radial.is_valid():
+                        # No data rows: qc_radial_file would run no tests and
+                        # write no output. Count it as what it is, not as ok.
+                        empty += 1
+                        continue
                     dst.parent.mkdir(parents=True, exist_ok=True)
-                    qc_radial_file(str(src), qc_values=qc_values,
+                    qc_radial_file(radial, qc_values=qc_values,
                                    export="radial", save_path=str(dst.parent))
                     ok += 1
                 except Exception:
@@ -253,13 +264,14 @@ def main(argv=None):
                         traceback.print_exc(limit=2, file=sys.stderr)
 
         print(f"{key:34} {len(files):>6} {len(todo):>6} {ok:>6} "
-              f"{skipped:>6} {err:>5}")
+              f"{empty:>6} {skipped:>6} {err:>5}")
         total.update(files=len(files), todo=len(todo), ok=ok,
-                     skip=skipped, err=err)
+                     empty=empty, skip=skipped, err=err)
 
-    print("-" * 70)
+    print("-" * 77)
     print(f"{'TOTAL':34} {total['files']:>6} {total['todo']:>6} "
-          f"{total['ok']:>6} {total['skip']:>6} {total['err']:>5}")
+          f"{total['ok']:>6} {total['empty']:>6} {total['skip']:>6} "
+          f"{total['err']:>5}")
 
     if unconfigured:
         n = sum(len(files) for _, files in unconfigured)
