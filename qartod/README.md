@@ -1,5 +1,39 @@
 # QARTOD processing for the local CODAR site tree
 
+## Daily pipeline
+
+Everything for the daily job lives in this directory:
+
+| File | Role |
+|---|---|
+| `daily_ruv.sh` | Cron entry point: activates the conda env, runs the two scripts below, prunes old QC output, logs to `~/codar/logs/` |
+| `pull_ruv.py` | Harvests the last 30 days of `.ruv` files from partner servers into `LOCAL_BASE` (see `README_pull_ruv.md`) |
+| `qc_walk.py` | Applies QARTOD QC to every raw file that has no QC output yet |
+| `environment.lock.yml` | Pinned conda env the job is known to work in |
+
+Server setup, once:
+
+```bash
+git clone --branch updated git@github.com:QI-Xiao/HFRadarPy.git
+cd HFRadarPy/qartod
+conda env create -n hfradarpy -f environment.lock.yml
+conda activate hfradarpy && pip install -e ..
+python qc_walk.py --dry-run          # confirm every site has thresholds
+./daily_ruv.sh                       # first run by hand; check ~/codar/logs/
+```
+
+Then one cron line (failures are mailed because the script exits non-zero):
+
+```
+MAILTO=you@tamu.edu
+30 6 * * *  $HOME/HFRadarPy/qartod/daily_ruv.sh
+```
+
+Edit the settings block at the top of `daily_ruv.sh` if the env name, log
+directory, or retention differ on the server. The data root for both scripts is
+`LOCAL_BASE` in `qc_config.py`.
+
+
 Applies the QARTOD radial tests to every `.ruv` file under `LOCAL_BASE`, writing
 flagged copies alongside the raw data:
 
@@ -218,11 +252,11 @@ redo. A per-file failure is counted and reported without aborting the run.
 
 ## Requirements
 
-The conda environment must have **`pandas < 3`**. Under pandas 3, `to_ruv()`
-raises `TypeError: Invalid value '%%' for dtype 'float64'` and leaves a
-truncated file on disk that still advertises its original row count. The pin is
-applied to the environment only; `environment_dev.yml` is unchanged. See
-`../TODO.md` item 1 for the underlying fix.
+Use the pinned environment in `environment.lock.yml` (currently pandas 2.3,
+numpy 2.3, xarray 2026.7). The historical **`pandas < 3`** requirement came from
+`to_ruv()` writing the string `%%` into a float column; that was fixed in commit
+`840c562`, but the fix has not yet been verified under pandas 3, so stay on the
+lock file until it has.
 
 ## Known limitations
 
