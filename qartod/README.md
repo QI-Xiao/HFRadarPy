@@ -10,6 +10,7 @@ Everything for the daily job lives in this directory:
 | `pull_ruv.py` | Harvests the last 30 days of `.ruv` files from partner servers into `LOCAL_BASE` (see `README_pull_ruv.md`) |
 | `qc_walk.py` | Applies QARTOD QC to every raw file that has no QC output yet |
 | `prune_qc.py` | Deletes `qartod/` output older than 30 days, mirroring what `pull_ruv.py` does for `raw/` |
+| `push_sites.sh` | Run on production: mirrors `~/codar/sites` (raw and QC `.ruv` files) to the test server |
 | `environment.lock.yml` | Pinned conda env the job is known to work in |
 
 Server setup, once:
@@ -33,6 +34,23 @@ MAILTO=you@tamu.edu
 Edit the three variables at the top of `daily_ruv.sh` (conda.sh path, env name,
 log directory) to match the server. The data root for all scripts is
 `LOCAL_BASE` in `qc_config.py`.
+
+When run from a terminal, `daily_ruv.sh` prints to the screen and the log;
+under cron it writes only to the log. The first run pulls and QCs a full
+30-day window, so expect it to take a while.
+
+### Mirroring to the test server
+
+`push_sites.sh` copies the whole site tree from production to the same path on
+the host `test` (an alias in `~/.ssh/config`), keeping only `.ruv` files and
+deleting on `test` whatever production has pruned, so both hold the same 30-day
+window. Dry-run first, then either call it after `daily_ruv.sh` in cron or add
+it as the last line of that script:
+
+```bash
+./push_sites.sh -n     # show what would change
+./push_sites.sh
+```
 
 
 Applies the QARTOD radial tests to every `.ruv` file under `LOCAL_BASE`, writing
