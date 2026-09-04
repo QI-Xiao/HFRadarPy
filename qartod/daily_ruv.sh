@@ -13,7 +13,8 @@ LOG_DIR="$HOME/codar/logs"
 
 cd "$(dirname "$0")" || exit 1                       # scripts import siblings by name
 mkdir -p "$LOG_DIR"
-exec >>"$LOG_DIR/daily_ruv_$(date +%Y%m%d_%H%M%S).log" 2>&1
+LOG="$LOG_DIR/daily_ruv_$(date +%Y%m%d_%H%M%S).log"
+if [ -t 1 ]; then exec > >(tee -a "$LOG") 2>&1; else exec >>"$LOG" 2>&1; fi   # show output when run by hand
 
 echo "=== start $(date '+%F %T') ==="
 source "$CONDA_SH" && conda activate "$CONDA_ENV" || { echo "conda activate $CONDA_ENV failed"; exit 1; }
