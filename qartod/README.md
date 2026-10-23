@@ -1,16 +1,30 @@
 # QARTOD processing for the local CODAR site tree
 
-## Daily pipeline
+## Where this fits
 
-Everything for the daily job lives in this directory:
+The radial files are **not** harvested here. The `hfradmin` repo pulls them
+from each institution's server (`scripts/pull_radials.py`, run by its
+`scripts/daily_radials.sh` from cron), prunes `raw/` **and** `qartod/`
+beyond its retention window, and loads whatever is on disk into MongoDB.
+This directory is only the QC transform in between: raw in, flagged copies
+out. hfradmin runs it when its `.env` has
+
+```
+RADIAL_QC_COMMAND=$HOME/HFRadarPy/qartod/run_qc.sh
+```
+
+and skips it when that is unset, in which case the site runs on raw radials.
+
+**The contract between the two repos is the tree layout.** `LOCAL_BASE`,
+`RAW_DIRNAME` and `QC_DIRNAME` in `qc_config.py` must match what hfradmin
+writes (`RADIAL_DATA_ROOT` in its `app/network_constants.py`; `raw` and
+`qartod`). The site list lives only in hfradmin (`RADIAL_INSTITUTIONS`);
+`qc_walk.py` simply walks every site folder it finds.
 
 | File | Role |
 |---|---|
-| `daily_ruv.sh` | Cron entry point: activates the conda env, runs the three scripts below, logs to `~/codar/logs/` |
-| `pull_ruv.py` | Harvests the last 30 days of `.ruv` files from partner servers into `LOCAL_BASE` (see `README_pull_ruv.md`) |
+| `run_qc.sh` | Entry point hfradmin calls: activates the conda env, runs `qc_walk.py`, logs to `~/codar/logs/` |
 | `qc_walk.py` | Applies QARTOD QC to every raw file that has no QC output yet |
-| `prune_qc.py` | Deletes `qartod/` output older than 30 days, mirroring what `pull_ruv.py` does for `raw/` |
-| `push_sites.sh` | Run on production: mirrors `~/codar/sites` (raw and QC `.ruv` files) to the test server |
 | `environment.lock.yml` | Pinned conda env the job is known to work in |
 
 Server setup, once:
@@ -21,37 +35,18 @@ cd HFRadarPy/qartod
 conda env create -n hfradarpy -f environment.lock.yml
 conda activate hfradarpy && pip install -e ..
 python qc_walk.py --dry-run          # confirm every site has thresholds
-./daily_ruv.sh                       # first run by hand; check ~/codar/logs/
+./run_qc.sh                          # first run by hand; check ~/codar/logs/
 ```
 
-Then one cron line (failures are mailed because the script exits non-zero):
+Then set `RADIAL_QC_COMMAND` in hfradmin's `.env` as above; no cron line of
+its own. Edit the three variables at the top of `run_qc.sh` (conda.sh path,
+env name, log directory) to match the server.
 
-```
-MAILTO=you@tamu.edu
-30 6 * * *  $HOME/HFRadarPy/qartod/daily_ruv.sh
-```
+When run from a terminal, `run_qc.sh` prints to the screen and the log;
+under cron it writes only to the log. The first run QCs the full retention
+window, so expect it to take a while.
 
-Edit the three variables at the top of `daily_ruv.sh` (conda.sh path, env name,
-log directory) to match the server. The data root for all scripts is
-`LOCAL_BASE` in `qc_config.py`.
-
-When run from a terminal, `daily_ruv.sh` prints to the screen and the log;
-under cron it writes only to the log. The first run pulls and QCs a full
-30-day window, so expect it to take a while.
-
-### Mirroring to the test server
-
-`push_sites.sh` copies the whole site tree from production to the same path on
-the host `test` (an alias in `~/.ssh/config`), keeping only `.ruv` files and
-deleting on `test` whatever production has pruned, so both hold the same 30-day
-window. Dry-run first, then either call it after `daily_ruv.sh` in cron or add
-it as the last line of that script:
-
-```bash
-./push_sites.sh -n     # show what would change
-./push_sites.sh
-```
-
+## What the QC does
 
 Applies the QARTOD radial tests to every `.ruv` file under `LOCAL_BASE`, writing
 flagged copies alongside the raw data:
